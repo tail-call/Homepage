@@ -27,6 +27,65 @@ const input = document.querySelector("#console");
 const consoleLog = document.querySelector("#consolelog");
 const calcStack = new CalcStack(); // Create an instance of CalcStack
 
+const commandHandlers = {
+    "c": () => {
+        calcStack.items = [];
+        consoleLog.textContent = "";
+    },
+    "d": () => {
+        result = calcStack.items[calcStack.items.length - 1];
+    },
+    "avg": () => {
+        const upper = calcStack.pop();
+        const lower = calcStack.pop();
+        result = (upper + lower) / 2;
+    },
+    "r": () => {
+        const lower = calcStack.pop();
+        const upper = calcStack.pop();
+        calcStack.push(lower);
+        result = upper;
+    },
+    ".": () => {
+        calcStack.pop();
+        result = calcStack.pop();
+    },
+    "R": () => {
+        result = calcStack.items.shift();
+    },
+    "+": () => {
+        const lower = calcStack.pop();
+        const upper = calcStack.pop();
+        result = upper + lower;
+    },
+    "-": () => {
+        const lower = calcStack.pop();
+        const upper = calcStack.pop();
+        result = upper - lower;
+    },
+    "*": () => {
+        const lower = calcStack.pop();
+        const upper = calcStack.pop();
+        result = upper * lower;
+    },
+    "/": () => {
+        const lower = calcStack.pop();
+        const upper = calcStack.pop();
+        result = upper / lower;
+    },
+    "v": () => {
+        result = Math.sqrt(calcStack.pop());
+    },
+    "default": (expression) => {
+        const func = new Function(
+            ...(calcStack.items.map((x, i) => `$${i+1}`)),
+            'window',
+            'return ' + expression
+        );
+        result = func.apply(window, [...calcStack.items, {}]);
+    }
+};
+
 input.onkeydown = (event) => {
     if (event.code === "ArrowUp") {
         input.value = input.placeholder;
@@ -41,51 +100,10 @@ input.onkeydown = (event) => {
     input.placeholder = expression;
     let result;
     try {
-        if (expression === "c") {
-            calcStack.items = [];
-            consoleLog.textContent = "";
-            return;
-        } else if (expression === "d") {
-            result = calcStack.items[calcStack.items.length - 1];
-        } else if (expression === "avg") {
-            const upper = calcStack.pop();
-            const lower = calcStack.pop();
-            result = (upper + lower) / 2;
-        } else if (expression === "r") {
-            const lower = calcStack.pop();
-            const upper = calcStack.pop();
-            calcStack.push(lower);
-            result = upper;
-        } else if (expression === ".") {
-            calcStack.pop();
-            result = calcStack.pop();
-        } else if (expression === "R") {
-            result = calcStack.items.shift();
-        } else if (expression === "+") {
-            const lower = calcStack.pop();
-            const upper = calcStack.pop();
-            result = upper + lower;
-        } else if (expression === "-") {
-            const lower = calcStack.pop();
-            const upper = calcStack.pop();
-            result = upper - lower;
-        } else if (expression === "*") {
-            const lower = calcStack.pop();
-            const upper = calcStack.pop();
-            result = upper * lower;
-        } else if (expression === "/") {
-            const lower = calcStack.pop();
-            const upper = calcStack.pop();
-            result = upper / lower;
-        } else if (expression === "v") {
-            result = Math.sqrt(calcStack.pop());
+        if (commandHandlers.hasOwnProperty(expression)) {
+            commandHandlers[expression]();
         } else {
-            const func = new Function(
-                ...(calcStack.items.map((x, i) => `$${i+1}`)),
-                'window',
-                'return ' + expression
-            );
-            result = func.apply(window, [...calcStack.items, {}]);
+            commandHandlers["default"](expression);
         }
     } catch (e) {
         result = e;
@@ -115,7 +133,7 @@ input.onkeydown = (event) => {
     }).join('\n');
 
     consoleLog.scrollBy(0, consoleLog.scrollHeight)
-}
+};
 
 const faviconOf = (url) => `${new URL(url).origin}/favicon.ico`;
 
