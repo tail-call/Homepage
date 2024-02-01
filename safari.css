@@ -1,0 +1,3 @@
+.feed_wall .replies, .post_content .replies, .feed_wall .like_btns, .wl_replies_block_wrap .wl_replies {
+    display: none;
+}
