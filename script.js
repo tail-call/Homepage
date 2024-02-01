@@ -6,15 +6,27 @@ function t([time]) {
     return (parseInt(hours) || 0) + (parseInt(minutes) || 0) / 60;
 }
 
+class CalcStack {
+    constructor() {
+        this.items = [];
+    }
+
+    push(item) {
+        this.items.push(item);
+    }
+
+    pop() {
+        if (this.items.length === 0) {
+            throw new Error("stack underflow");
+        }
+        return this.items.pop();
+    }
+}
+
 const input = document.querySelector("#console");
 const consoleLog = document.querySelector("#consolelog");
-let calcStack = [];
-const popCalcStask = () => {
-    if (calcStack.length === 0) {
-        throw new Error("stack underflow");
-    }
-    return calcStack.pop();
-}
+const calcStack = new CalcStack(); // Create an instance of CalcStack
+
 input.onkeydown = (event) => {
     if (event.code === "ArrowUp") {
         input.value = input.placeholder;
@@ -30,51 +42,50 @@ input.onkeydown = (event) => {
     let result;
     try {
         if (expression === "c") {
-            calcStack = [];
+            calcStack.items = [];
             consoleLog.textContent = "";
             return;
         } else if (expression === "d") {
-            result = calcStack[calcStack.length - 1];
+            result = calcStack.items[calcStack.items.length - 1];
         } else if (expression === "avg") {
-            const upper = popCalcStask();
-            const lower = popCalcStask();
+            const upper = calcStack.pop();
+            const lower = calcStack.pop();
             result = (upper + lower) / 2;
         } else if (expression === "r") {
-            const lower = popCalcStask();
-            const upper = popCalcStask();
+            const lower = calcStack.pop();
+            const upper = calcStack.pop();
             calcStack.push(lower);
             result = upper;
         } else if (expression === ".") {
-            popCalcStask();
-            result = popCalcStask();
+            calcStack.pop();
+            result = calcStack.pop();
         } else if (expression === "R") {
-            result = calcStack.shift();
+            result = calcStack.items.shift();
         } else if (expression === "+") {
-            const lower = popCalcStask();
-            const upper = popCalcStask();
+            const lower = calcStack.pop();
+            const upper = calcStack.pop();
             result = upper + lower;
         } else if (expression === "-") {
-            const lower = popCalcStask();
-            const upper = popCalcStask();
+            const lower = calcStack.pop();
+            const upper = calcStack.pop();
             result = upper - lower;
         } else if (expression === "*") {
-            const lower = popCalcStask();
-            const upper = popCalcStask();
+            const lower = calcStack.pop();
+            const upper = calcStack.pop();
             result = upper * lower;
         } else if (expression === "/") {
-            const lower = popCalcStask();
-            const upper = popCalcStask();
+            const lower = calcStack.pop();
+            const upper = calcStack.pop();
             result = upper / lower;
         } else if (expression === "v") {
-            result = Math.sqrt(popCalcStask());
+            result = Math.sqrt(calcStack.pop());
         } else {
-            // Log result so I don't lose it accidentally
             const func = new Function(
-                ...(calcStack.map((x, i) => `$${i+1}`)),
+                ...(calcStack.items.map((x, i) => `$${i+1}`)),
                 'window',
                 'return ' + expression
             );
-            result = func.apply(window, [...calcStack, {}]);
+            result = func.apply(window, [...calcStack.items, {}]);
         }
     } catch (e) {
         result = e;
@@ -83,7 +94,7 @@ input.onkeydown = (event) => {
     console.log('result:', result);
 
     calcStack.push(result)
-    consoleLog.textContent = calcStack.map((x, i) => {
+    consoleLog.textContent = calcStack.items.map((x, i) => {
         let view;
         if (x instanceof Error) {
             view = x;
@@ -99,7 +110,7 @@ input.onkeydown = (event) => {
             view = JSON.stringify(x);
         }
 
-        const suffix  = (i === calcStack.length - 1) ? " <-" : "";
+        const suffix  = (i === calcStack.items.length - 1) ? " <-" : "";
         return `$${i+1}: ` + view + suffix;
     }).join('\n');
 
