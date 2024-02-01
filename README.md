@@ -1,3 +1,3 @@
 # Homepage
 
-Я использую это как домашнюю страницу, мне так норм
+This is my personal homepage
